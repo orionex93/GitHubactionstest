@@ -16,7 +16,7 @@ jobs:
         uses: hashicorp/setup-terraform@v1
       
       - name: Check Terraform format
-        run: terraform fmt --recursive -check=true -diff=true
+        run: terraform fmt --recursive
       
       - name: Commit changes (if any)
         run: |
