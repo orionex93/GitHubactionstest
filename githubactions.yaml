@@ -1,0 +1,28 @@
+name: Terraform Format Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.tf'
+
+jobs:
+  terraform_format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v1
+      
+      - name: Check Terraform format
+        run: terraform fmt --recursive -check=true -diff=true
+      
+      - name: Commit changes (if any)
+        run: |
+          git diff --exit-code --quiet || (git config --local user.email "actions@github.com" && \
+          git config --local user.name "GitHub Action" && \
+          git commit -am "Automated Terraform formatting" && \
+          git push)
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
