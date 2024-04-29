@@ -32,37 +32,3 @@ jobs:
           git push origin ${steps.terraform_format.outputs.name})
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-name: Terraform Format Check
-
-on:
-  pull_request:
-    paths:
-      - '**/*.tf'
-
-jobs:
-  terraform_format:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v1
-      
-      - name: Check Terraform format
-        run: terraform fmt --recursive
-      
-      - name: Get current branch name
-        id: branch
-        run: echo "::set-output name=name::$(echo ${GITHUB_REF#refs/heads/})"
-      
-      - name: Commit changes (if any)
-        if: success() && steps.terraform_format.outputs.name != 'main' && steps.terraform_format.outputs.name != 'master'
-        run: |
-          git diff --exit-code --quiet || (git config --local user.email "actions@github.com" && \
-          git config --local user.name "GitHub Action" && \
-          git add . && \
-          git commit -m "Automated Terraform formatting" && \
-          git push origin ${steps.terraform_format.outputs.name})
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
