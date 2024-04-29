@@ -10,3 +10,8 @@ resource "hcp_service_principal" "sp" {
 name   = "example-sp"
 parent = hcp_project.example.resource_name
 }
+
+resource "hcp_service_principal" "sp" {
+name   = "example-sp"
+parent = hcp_project.example.resource_name
+}
