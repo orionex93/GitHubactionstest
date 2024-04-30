@@ -1,4 +1,4 @@
-name: Terraform Format Check
+name: Terraform Format
 
 on:
   pull_request:
@@ -11,24 +11,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
-      
-      - name: Check Terraform format
+        with:
+          terraform_version: 'latest'
+
+      - name: Terraform Format
         run: terraform fmt --recursive
-      
-      - name: Get current branch name
-        id: branch
-        run: echo "::set-output name=name::$(git rev-parse --abbrev-ref HEAD)"
-      
-      - name: Commit changes (if any)
-        if: success() && steps.terraform_format.outputs.name != 'main' && steps.terraform_format.outputs.name != 'master'
+
+      - name: Commit changes
         run: |
-          git diff --exit-code --quiet || (git config --local user.email "actions@github.com" && \
-          git config --local user.name "GitHub Action" && \
-          git add . && \
-          git commit -m "Automated Terraform formatting" && \
-          git push origin ${GITHUB_REF})
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add .
+          git commit -m "Auto-format Terraform files"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
