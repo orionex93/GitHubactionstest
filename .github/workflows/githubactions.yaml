@@ -28,6 +28,10 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add .
           git commit -m "Auto-format Terraform files"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }} --force-with-lease
+          git remote set-url --push origin https://orionex93:$TOKEN@github.com/GitHubactionstest.git
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+
+
+
