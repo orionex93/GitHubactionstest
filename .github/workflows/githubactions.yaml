@@ -22,16 +22,26 @@ jobs:
       - name: Terraform Format
         run: terraform fmt --recursive
 
-      - name: Commit changes
+      - name: Copy formatted files
+        run: |
+          cp -r . $GITHUB_WORKSPACE/temp
+          rm -rf .
+          mv $GITHUB_WORKSPACE/temp/* .
+          rm -rf $GITHUB_WORKSPACE/temp
+
+      - name: Git Status Before
+        run: git status
+
+      - name: Git Add Changes
+        run: git add .
+
+      - name: Git Commit Changes
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add .
           git commit -m "Auto-format Terraform files"
-          git remote set-url --push origin https://orionex93:$TOKEN@github.com/GitHubactionstest.git
+
+      - name: Git Push Changes
+        run: git remote set-url --push origin https://orionex93:$TOKEN@github.com/GitHubactionstest.git
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-
-
-
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
