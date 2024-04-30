@@ -1,31 +1,70 @@
-name: Terraform Format
+name: Terraform Format Workflow
 
+# Trigger the workflow on pull requests
 on:
+  # Trigger the workflow on new pull requests or when existing ones are updated
   pull_request:
-    paths:
-      - '**/*.tf'
+    types: [opened, synchronize]
+
+# Set permissions for write access to repository contents
+permissions:
+  contents: write
+
+# Define concurrency settings for the workflow to keep all runs even if a new one is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   terraform_format:
+    name: Terraform Format
+    # Operating system for job execution
     runs-on: ubuntu-latest
+
+    # Default settings for all steps in the job
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Use the checkout action to clone the repository
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0 # Fetch complete history to enable checking for changed files
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+        # persist-credentials: false # Do not persist credentials to avoid storing them in the workspace
 
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 'latest'
+      # Step to set up Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
+      # Step to format Terraform configuration files
       - name: Terraform Format
-        run: terraform fmt --recursive
+        run: terraform fmt
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+      # Step to verify if any Terraform files have changed
+      - name: Verify Changed files
+        uses: tj-actions/verify-changed-files@v19
+        id: verify-changed-files
         with:
-          commit_message: Auto-format Terraform files
-          commit_options: '--no-verify'
+          files: |
+            *.tf
+            **/*.tf
+
+      # Step to run when any Terraform files have changed
+      - name: Run step only when any of the above files change.
+        if: steps.verify-changed-files.outputs.files_changed == 'true' # Condition to check if files have changed
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          CHANGED_FILES: ${{ steps.verify-changed-files.outputs.changed_files }}
+        run: |
+          echo "Changed Terraform files: $CHANGED_FILES"
+
+      # Step to commit changes when Terraform files have changed
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        if: steps.verify-changed-files.outputs.files_changed == 'true' # Condition to check if files have changed
+        with:
+          message: "chore: Terraform Format Applied"
+          add: "*.tf"
