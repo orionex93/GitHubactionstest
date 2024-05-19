@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+# Set permissions for write access to repository contents
+permissions:
+  contents: write
+  
 jobs:
   verify-commits:
     runs-on: ubuntu-latest
