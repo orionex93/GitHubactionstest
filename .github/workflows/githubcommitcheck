@@ -1,0 +1,41 @@
+name: Verify Signed Commits
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  verify-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+
+    - name: Verify signed commits
+      id: verify
+      run: |
+        set -e
+        COMMITS=$(git rev-list origin/main..HEAD)
+        for COMMIT in $COMMITS; do
+          if ! git verify-commit $COMMIT; then
+            echo "::set-output name=unsigned_commit::true"
+            break
+          fi
+        done
+      continue-on-error: true
+
+    - name: Post unsigned commit warning
+      if: steps.verify.outputs.unsigned_commit == 'true'
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "Some commits in this pull request are not signed and verified. Please follow the instructions [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits) to sign your commits."
+          })
