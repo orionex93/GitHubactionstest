@@ -7,6 +7,7 @@ on:
 # Set permissions for write access to repository contents
 permissions:
   contents: write
+  pull-requests: write
   
 jobs:
   verify-commits:
